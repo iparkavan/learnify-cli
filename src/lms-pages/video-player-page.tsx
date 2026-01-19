@@ -1,3 +1,324 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  ArrowLeft,
+  Maximize,
+  Minimize,
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
+
+import React, { useEffect, useRef, useState } from "react";
+
+interface VideoCoursePlayerProps {
+  data: {
+    title: string;
+    chapters: Array<{}>;
+    videoUrl: string;
+  };
+}
+
+interface Chapter {
+  id: string;
+  title: string;
+  duration: string;
+  timestamp: number;
+  completed?: boolean;
+}
+
+const VideoCoursePlayer = ({ data }: VideoCoursePlayerProps) => {
+  const { title, chapters, videoUrl } = data;
+
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [showControls, setShowControls] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [volume, setVolume] = useState(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [currentChapter, setCurrentChapter] = useState(0);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleTimeUpdate = () => setCurrentTime(video.currentTime);
+    const handleLoadedMetadata = () => setDuration(video.duration);
+    const handleEnded = () => setIsPlaying(false);
+
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    video.addEventListener("loadedmetadata", handleLoadedMetadata);
+    video.addEventListener("ended", handleEnded);
+
+    return () => {
+      video.removeEventListener("timeupdate", handleTimeUpdate);
+      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      video.removeEventListener("ended", handleEnded);
+    };
+  }, []);
+
+  // useEffect(() => {
+  //   const chapter = chapters.findIndex((ch: Chapter, idx: number) => {
+  //     const nextChapter = chapters[idx + 1];
+  //     return (
+  //       currentTime >= ch.timestamp &&
+  //       (!nextChapter || currentTime < nextChapter.timestamp)
+  //     );
+  //   });
+  //   if (chapter !== -1) setCurrentChapter(chapter);
+  // }, [currentTime, chapters]);
+
+  const togglePlay = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+    }
+    setIsMuted((prev) => !prev);
+  };
+
+  const skipTime = (seconds: number) => {
+    if (videoRef.current) [(videoRef.current.currentTime += seconds)];
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const mouseMoveHandler = () => {
+    setShowControls(true);
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+    controlsTimeoutRef.current = setTimeout(() => {
+      if (isPlaying) setShowControls(false);
+    }, 3000);
+  };
+
+  const handleSeek = (value: number[]) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = value[0];
+      setCurrentTime(value[0]);
+    }
+  };
+
+  const handleVolumeChange = (value: number[]) => {
+    if (!videoRef.current) return;
+    console.log(value);
+    const newVolume = value[0];
+    videoRef.current.volume = newVolume;
+    setVolume(newVolume);
+    setIsMuted(newVolume === 0);
+  };
+
+  const changePlaybackRate = () => {
+    const rates = [0.5, 0.75, 1, 1.25, 1.5, 2];
+    const currentIndex = rates.indexOf(playbackRate);
+    const newRate = rates[(currentIndex + 1) % rates.length];
+    setPlaybackRate(newRate);
+    if (videoRef.current) {
+      videoRef.current.playbackRate = newRate;
+    }
+  };
+
+  const toggleFullscreen = () => {
+    if (!containerRef.current) return;
+
+    if (!isFullscreen) {
+      containerRef.current.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+    setIsFullscreen(!isFullscreen);
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="border-b border-border bg-card sticky top-0 z-10">
+        <div className="px-4 py-4 flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            // onClick={() => navigate(`/course/${id}`)}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-xl font-semibold truncate">{title}</h1>
+        </div>
+      </div>
+
+      {/* Main Content */}
+
+      <div className="container mx-auto">
+        <div className="grid grid-cols-[3fr_1fr] p-4 gap-4">
+          {/* Video Container Player */}
+          <div
+            ref={containerRef}
+            className="relative aspect-video bg-black rounded-lg overflow-hidden"
+            onMouseMove={mouseMoveHandler}
+            onMouseLeave={() => isPlaying && setShowControls(false)}
+          >
+            {/* Video Player */}
+            <video src={videoUrl} ref={videoRef} className="w-full h-full" />
+
+            {/* Play Overlay */}
+            {!isPlaying && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Button className="w-20 h-20 rounded-full" onClick={togglePlay}>
+                  <Play className="w-8 h-8 fill-current" />
+                </Button>
+              </div>
+            )}
+
+            {/* Player Controls */}
+            {showControls && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black to-transparent p-4 space-y-2"
+              >
+                {/* Progress Bar */}
+                <Slider
+                  value={[currentTime]}
+                  max={duration}
+                  step={0.1}
+                  onValueChange={handleSeek}
+                  className="cursor-pointer"
+                  // value={[currentTime]}
+                  // max={duration}
+                  // step={0.1}
+                  // onValueChange={handleSeek}
+                  // className="cursor-pointer"
+                />
+
+                <div className="flex items-center justify-between gap-4 pt-0.5">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size={"icon"}
+                      onClick={togglePlay}
+                      className="text-white hover:bg-white/20"
+                    >
+                      {isPlaying ? (
+                        <Pause className="w-5 h-5" />
+                      ) : (
+                        <Play className="w-5 h-5" />
+                      )}
+                    </Button>
+
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => skipTime(-10)}
+                      className="text-white hover:bg-white/20"
+                    >
+                      <SkipBack className="h-4 w-4" />
+                    </Button>
+
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => skipTime(10)}
+                      className="text-white hover:bg-white/20"
+                    >
+                      <SkipForward className="h-4 w-4" />
+                    </Button>
+
+                    {/* Volume Control */}
+                    <div className="flex items-center gap-2 group">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={toggleMute}
+                        className="text-white hover:bg-white/20"
+                      >
+                        {isMuted || volume === 0 ? (
+                          <VolumeX className="h-4 w-4" />
+                        ) : (
+                          <Volume2 className="h-4 w-4" />
+                        )}
+                      </Button>
+
+                      <div className="w-0 group-hover:w-24 transition-all duration-200 overflow-hidden">
+                        <Slider
+                          value={[isMuted ? 0 : volume]}
+                          max={1}
+                          step={0.01}
+                          onValueChange={handleVolumeChange}
+                          className="cursor-pointer"
+                        />
+                      </div>
+                    </div>
+
+                    <span className="text-white text-sm hidden sm:inline">
+                      {formatTime(currentTime)} / {formatTime(duration)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={changePlaybackRate}
+                      className="text-white hover:bg-white/20 h-8 px-3"
+                    >
+                      {playbackRate}x
+                    </Button>
+
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={toggleFullscreen}
+                      className="text-white hover:bg-white/20"
+                    >
+                      {isFullscreen ? (
+                        <Minimize className="h-4 w-4" />
+                      ) : (
+                        <Maximize className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </div>
+
+          {/* Chapter List */}
+          <div>
+            <h2>Chapter List</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default VideoCoursePlayer;
+
 // import { useState, useRef, useEffect } from "react";
 // import { motion, AnimatePresence } from "framer-motion";
 // import { Button } from "@/components/ui/button";
@@ -33,13 +354,13 @@
 //     chapters: [],
 //     videoUrl: "",
 //   });
-//   //   const pathname = usePathname();
-//   //   const { title, chapters, videoUrl } = location.state || {
-//   //     title: "Course Video",
-//   //     chapters: [],
-//   //     videoUrl:
-//   //       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-//   //   };
+//   const pathname = usePathname();
+//   const { title, chapters, videoUrl } = location.state || {
+//     title: "Course Video",
+//     chapters: [],
+//     videoUrl:
+//       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+//   };
 
 //   useEffect(() => {
 //     const data = JSON.parse(localStorage.getItem("videoPageData") || "{}");
@@ -79,16 +400,16 @@
 //     };
 //   }, []);
 
-//   //   useEffect(() => {
-//   //     const chapter = data.chapters.findIndex((ch: Chapter, idx: number) => {
-//   //       const nextChapter = chapters[idx + 1];
-//   //       return (
-//   //         currentTime >= ch.timestamp &&
-//   //         (!nextChapter || currentTime < nextChapter.timestamp)
-//   //       );
-//   //     });
-//   //     if (chapter !== -1) setCurrentChapter(chapter);
-//   //   }, [currentTime, chapters]);
+//   useEffect(() => {
+//     const chapter = data.chapters.findIndex((ch: Chapter, idx: number) => {
+//       const nextChapter = chapters[idx + 1];
+//       return (
+//         currentTime >= ch.timestamp &&
+//         (!nextChapter || currentTime < nextChapter.timestamp)
+//       );
+//     });
+//     if (chapter !== -1) setCurrentChapter(chapter);
+//   }, [currentTime, chapters]);
 
 //   const togglePlay = () => {
 //     if (videoRef.current) {

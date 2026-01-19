@@ -7,6 +7,8 @@ import Courses from "./Courses";
 import { useUserInfoStore } from "@/store/userInfo-store";
 import { Course } from "@/types/course-types";
 import Contact from "./contacts";
+import CTA from "./CTA";
+import Pricing from "./pricing";
 
 const LandingPage = ({
   courses,
@@ -29,8 +31,8 @@ const LandingPage = ({
         <>
           {/* <Courses /> */}
           <Features />
-          {/* <Pricing /> */}
-          {/* <CTA /> */}
+          <Pricing />
+          <CTA />
           <Contact />
         </>
       )}

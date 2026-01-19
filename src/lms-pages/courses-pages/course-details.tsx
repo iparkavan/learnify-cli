@@ -245,7 +245,7 @@ const CourseDetails: React.FC<CourseDetailsProps> = ({ course }) => {
                   })
                 );
 
-                router.push(`/course/${id}/watch`);
+                router.push(`/courses/${id}/watch`);
               }}
             >
               <Image
@@ -449,7 +449,7 @@ const CourseDetails: React.FC<CourseDetailsProps> = ({ course }) => {
               </Card>
 
               {/* Course Content */}
-              {/* <Card>
+              <Card>
                 <CardHeader>
                   <CardTitle className="text-2xl">Course content</CardTitle>
                   <CardDescription>
@@ -504,10 +504,10 @@ const CourseDetails: React.FC<CourseDetailsProps> = ({ course }) => {
                     ))}
                   </Accordion>
                 </CardContent>
-              </Card> */}
+              </Card>
 
               {/* Requirements */}
-              {/* <Card>
+              <Card>
                 <CardHeader>
                   <CardTitle className="text-2xl">Requirements</CardTitle>
                 </CardHeader>
@@ -521,7 +521,7 @@ const CourseDetails: React.FC<CourseDetailsProps> = ({ course }) => {
                     ))}
                   </ul>
                 </CardContent>
-              </Card> */}
+              </Card>
 
               {/* Description */}
               <Card>
@@ -530,7 +530,7 @@ const CourseDetails: React.FC<CourseDetailsProps> = ({ course }) => {
                 </CardHeader>
                 <CardContent className="space-y-4 text-sm leading-relaxed">
                   {course.description}
-                  {/* <p>
+                  <p>
                     Welcome to the most comprehensive and up-to-date web
                     development course on the internet! This course is designed
                     to take you from zero to hero, whether you're looking to
@@ -560,7 +560,7 @@ const CourseDetails: React.FC<CourseDetailsProps> = ({ course }) => {
                     <li>Active community support</li>
                     <li>Industry-relevant curriculum</li>
                     <li>Professional instructor with 10+ years experience</li>
-                  </ul> */}
+                  </ul>
                 </CardContent>
               </Card>
 
@@ -605,18 +605,18 @@ const CourseDetails: React.FC<CourseDetailsProps> = ({ course }) => {
                   </div>
                   <p className="text-sm leading-relaxed">
                     {course.instructor.bio}
-                    {/* Sarah is a Senior Full-Stack Developer with over 10 years of
+                    Sarah is a Senior Full-Stack Developer with over 10 years of
                     experience in the tech industry. She has worked with Fortune
                     500 companies and startups, building scalable web
                     applications. Sarah is passionate about teaching and has
                     helped thousands of students launch their careers in web
-                    development. */}
+                    development.
                   </p>
                 </CardContent>
               </Card>
 
               {/* Student Reviews */}
-              {/* <Card>
+              <Card>
                 <CardHeader>
                   <CardTitle className="text-2xl">Student feedback</CardTitle>
                   <div className="flex items-center gap-4 mt-4">
@@ -701,7 +701,7 @@ const CourseDetails: React.FC<CourseDetailsProps> = ({ course }) => {
                     </motion.div>
                   ))}
                 </CardContent>
-              </Card> */}
+              </Card>
             </div>
 
             {/* Right Sidebar - Course Preview */}
@@ -709,19 +709,19 @@ const CourseDetails: React.FC<CourseDetailsProps> = ({ course }) => {
               <Card className="sticky top-24 py--6">
                 <div
                   className="relative aspect-video rounded-t-lg overflow-hidden cursor-pointer group"
-                  // onClick={() => {
-                  //   localStorage.setItem(
-                  //     "videoPageData",
-                  //     JSON.stringify({
-                  //       title: courseData.title,
-                  //       chapters: videoChapters,
-                  //       videoUrl:
-                  //         "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                  //     })
-                  //   );
+                  onClick={() => {
+                    localStorage.setItem(
+                      "videoPageData",
+                      JSON.stringify({
+                        title: courseData.title,
+                        chapters: videoChapters,
+                        videoUrl:
+                          "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                      })
+                    );
 
-                  //   router.push(`/course/${id}/watch`);
-                  // }}
+                    router.push(`/courses/${id}/watch`);
+                  }}
                 >
                   <Image
                     fill
@@ -729,11 +729,11 @@ const CourseDetails: React.FC<CourseDetailsProps> = ({ course }) => {
                     alt={courseData.title}
                     className="w-full h-full object-cover"
                   />
-                  {/* <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/30 transition-colors">
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/30 transition-colors">
                     <Button size="lg" className="h-16 w-16 rounded-full">
                       <PlayCircle className="h-8 w-8" />
                     </Button>
-                  </div> */}
+                  </div>
                 </div>
                 <CardContent className="p-6">
                   <div className="space-y-4">

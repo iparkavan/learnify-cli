@@ -1,4 +1,6 @@
 import CourseDetails from "@/lms-pages/courses-pages/course-details";
+import Footer from "@/lms-pages/landing-page/Footer";
+import Navbar from "@/lms-pages/landing-page/NavBar";
 import { Course } from "@/types/course-types";
 import ProtectedProfileSetupRoute from "@/utils/profile-setup-protected";
 import { safeFetch } from "@/utils/safe-fetch";
@@ -23,9 +25,11 @@ const page = async ({ params }: CoursePageProps) => {
 
   return (
     <div>
+      <Navbar />
       <ProtectedProfileSetupRoute>
         <CourseDetails course={course} />
       </ProtectedProfileSetupRoute>
+      <Footer />
     </div>
   );
 };

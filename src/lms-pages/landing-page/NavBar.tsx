@@ -48,13 +48,10 @@ const Navbar = () => {
               transition={{ delay: 0.2 }}
               className="flex items-center gap-2"
             >
-              <Image
-                src="/logos/logo.png"
-                width={180}
-                height={100}
-                alt="logo"
-                // className={theme === "dark" ? "hidden" : "block"}
-              />
+              <BookOpen className="h-8 w-8 text-primary" />
+              <span className="text-2xl font-bold bg-linear-to-r from-primary to-accent bg-clip-text text-transparent">
+                EduPlatform
+              </span>
             </motion.div>
           </Link>
 
@@ -86,12 +83,12 @@ const Navbar = () => {
                   Courses
                 </a>
 
-                {/* <a
+                <a
                   href="/#pricing"
                   className="hover:text-primary transition-all duration-200 hover:scale-125"
                 >
                   Pricing
-                </a> */}
+                </a>
               </>
             )}
             <div className="flex items-center gap-2">
