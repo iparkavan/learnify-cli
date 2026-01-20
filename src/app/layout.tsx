@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/Theme/theme-provider";
-import Navbar from "../lms-pages/landing-page/NavBar";
 import QueryProvider from "@/context/query-provider";
 import { UserProvider } from "@/context/user-provider";
 import Script from "next/script";
 import { Toaster } from "@/components/ui/sonner";
+import Navbar from "@/lms-pages/landing-page/NavBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,6 +47,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <QueryProvider>
             <UserProvider>
+              {/* <Navbar /> */}
               {children}
               <Toaster />
             </UserProvider>

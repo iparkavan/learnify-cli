@@ -71,16 +71,16 @@ const Navbar = () => {
                   Hero
                 </a>
                 <a
-                  href="/#features"
-                  className="hover:text-primary transition-all duration-200 hover:scale-125"
-                >
-                  Features
-                </a>
-                <a
                   href="/#courses"
                   className="hover:text-primary transition-all duration-200 hover:scale-125"
                 >
                   Courses
+                </a>
+                <a
+                  href="/#features"
+                  className="hover:text-primary transition-all duration-200 hover:scale-125"
+                >
+                  Features
                 </a>
 
                 <a
@@ -88,6 +88,13 @@ const Navbar = () => {
                   className="hover:text-primary transition-all duration-200 hover:scale-125"
                 >
                   Pricing
+                </a>
+
+                <a
+                  href="/#contact"
+                  className="hover:text-primary transition-all duration-200 hover:scale-125"
+                >
+                  Contact Us
                 </a>
               </>
             )}

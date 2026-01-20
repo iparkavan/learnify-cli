@@ -37,160 +37,160 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUserInfoStore } from "@/store/userInfo-store";
 import { getInitialConverter } from "@/utils/initial-converter";
 
-// const courses = [
-//   {
-//     id: 1,
-//     icon: Code,
-//     title: "Complete Web Development Bootcamp 2024",
-//     instructor: "Dr. Angela Yu",
-//     rating: 4.7,
-//     reviews: 325420,
-//     students: 850000,
-//     price: "$89.99",
-//     originalPrice: "$149.99",
-//     image:
-//       "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=450&fit=crop",
-//     duration: "52 hours",
-//     lectures: 380,
-//     level: "All Levels",
-//     category: "Web Development",
-//     color: "from-blue-500 to-cyan-500",
-//     bestseller: true,
-//   },
-//   {
-//     id: 2,
-//     icon: Brain,
-//     title: "Machine Learning A-Z: AI, Python & R",
-//     instructor: "Kirill Eremenko",
-//     rating: 4.5,
-//     reviews: 168540,
-//     students: 520000,
-//     price: "$94.99",
-//     originalPrice: "$159.99",
-//     image:
-//       "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=450&fit=crop",
-//     duration: "44 hours",
-//     lectures: 320,
-//     level: "Intermediate",
-//     category: "AI & Machine Learning",
-//     color: "from-orange-500 to-red-500",
-//     bestseller: true,
-//   },
-//   {
-//     id: 3,
-//     icon: Palette,
-//     title: "UI/UX Design Specialization",
-//     instructor: "Daniel Schifano",
-//     rating: 4.8,
-//     reviews: 94230,
-//     students: 380000,
-//     price: "$79.99",
-//     originalPrice: "$139.99",
-//     image:
-//       "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=800&h=450&fit=crop",
-//     duration: "28 hours",
-//     lectures: 215,
-//     level: "Beginner",
-//     category: "Design",
-//     color: "from-purple-500 to-pink-500",
-//     bestseller: false,
-//   },
-//   {
-//     id: 4,
-//     icon: Database,
-//     title: "The Complete SQL Bootcamp 2024",
-//     instructor: "Jose Portilla",
-//     rating: 4.6,
-//     reviews: 128450,
-//     students: 450000,
-//     price: "$84.99",
-//     originalPrice: "$144.99",
-//     image:
-//       "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=800&h=450&fit=crop",
-//     duration: "36 hours",
-//     lectures: 280,
-//     level: "All Levels",
-//     category: "Data Science",
-//     color: "from-green-500 to-emerald-500",
-//     bestseller: true,
-//   },
-//   {
-//     id: 5,
-//     icon: Megaphone,
-//     title: "Digital Marketing Masterclass",
-//     instructor: "Phil Ebiner",
-//     rating: 4.5,
-//     reviews: 85620,
-//     students: 320000,
-//     price: "$74.99",
-//     originalPrice: "$134.99",
-//     image:
-//       "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=450&fit=crop",
-//     duration: "24 hours",
-//     lectures: 190,
-//     level: "Beginner",
-//     category: "Digital Marketing",
-//     color: "from-yellow-500 to-orange-500",
-//     bestseller: false,
-//   },
-//   {
-//     id: 6,
-//     icon: TrendingUp,
-//     title: "Business Strategy & Entrepreneurship",
-//     instructor: "Chris Haroun",
-//     rating: 4.7,
-//     reviews: 72340,
-//     students: 280000,
-//     price: "$69.99",
-//     originalPrice: "$129.99",
-//     image:
-//       "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=450&fit=crop",
-//     duration: "32 hours",
-//     lectures: 245,
-//     level: "Intermediate",
-//     category: "Business",
-//     color: "from-indigo-500 to-blue-500",
-//     bestseller: false,
-//   },
-//   {
-//     id: 7,
-//     icon: Code,
-//     title: "React - The Complete Guide 2024",
-//     instructor: "Maximilian Schwarzmüller",
-//     rating: 4.8,
-//     reviews: 215680,
-//     students: 680000,
-//     price: "$89.99",
-//     originalPrice: "$149.99",
-//     image:
-//       "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=450&fit=crop",
-//     duration: "48 hours",
-//     lectures: 410,
-//     level: "All Levels",
-//     category: "Web Development",
-//     color: "from-blue-500 to-cyan-500",
-//     bestseller: true,
-//   },
-//   {
-//     id: 8,
-//     icon: Brain,
-//     title: "Deep Learning Specialization",
-//     instructor: "Andrew Ng",
-//     rating: 4.9,
-//     reviews: 186540,
-//     students: 590000,
-//     price: "$99.99",
-//     originalPrice: "$169.99",
-//     image:
-//       "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&h=450&fit=crop",
-//     duration: "56 hours",
-//     lectures: 385,
-//     level: "Advanced",
-//     category: "AI & Machine Learning",
-//     color: "from-orange-500 to-red-500",
-//     bestseller: true,
-//   },
-// ];
+const courses = [
+  {
+    id: 1,
+    icon: Code,
+    title: "Complete Web Development Bootcamp 2024",
+    instructor: "Dr. Angela Yu",
+    rating: 4.7,
+    reviews: 325420,
+    students: 850000,
+    price: "$89.99",
+    originalPrice: "$149.99",
+    image:
+      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=450&fit=crop",
+    duration: "52 hours",
+    lectures: 380,
+    level: "All Levels",
+    category: "Web Development",
+    color: "from-blue-500 to-cyan-500",
+    bestseller: true,
+  },
+  {
+    id: 2,
+    icon: Brain,
+    title: "Machine Learning A-Z: AI, Python & R",
+    instructor: "Kirill Eremenko",
+    rating: 4.5,
+    reviews: 168540,
+    students: 520000,
+    price: "$94.99",
+    originalPrice: "$159.99",
+    image:
+      "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=450&fit=crop",
+    duration: "44 hours",
+    lectures: 320,
+    level: "Intermediate",
+    category: "AI & Machine Learning",
+    color: "from-orange-500 to-red-500",
+    bestseller: true,
+  },
+  {
+    id: 3,
+    icon: Palette,
+    title: "UI/UX Design Specialization",
+    instructor: "Daniel Schifano",
+    rating: 4.8,
+    reviews: 94230,
+    students: 380000,
+    price: "$79.99",
+    originalPrice: "$139.99",
+    image:
+      "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=800&h=450&fit=crop",
+    duration: "28 hours",
+    lectures: 215,
+    level: "Beginner",
+    category: "Design",
+    color: "from-purple-500 to-pink-500",
+    bestseller: false,
+  },
+  {
+    id: 4,
+    icon: Database,
+    title: "The Complete SQL Bootcamp 2024",
+    instructor: "Jose Portilla",
+    rating: 4.6,
+    reviews: 128450,
+    students: 450000,
+    price: "$84.99",
+    originalPrice: "$144.99",
+    image:
+      "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=800&h=450&fit=crop",
+    duration: "36 hours",
+    lectures: 280,
+    level: "All Levels",
+    category: "Data Science",
+    color: "from-green-500 to-emerald-500",
+    bestseller: true,
+  },
+  {
+    id: 5,
+    icon: Megaphone,
+    title: "Digital Marketing Masterclass",
+    instructor: "Phil Ebiner",
+    rating: 4.5,
+    reviews: 85620,
+    students: 320000,
+    price: "$74.99",
+    originalPrice: "$134.99",
+    image:
+      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=450&fit=crop",
+    duration: "24 hours",
+    lectures: 190,
+    level: "Beginner",
+    category: "Digital Marketing",
+    color: "from-yellow-500 to-orange-500",
+    bestseller: false,
+  },
+  {
+    id: 6,
+    icon: TrendingUp,
+    title: "Business Strategy & Entrepreneurship",
+    instructor: "Chris Haroun",
+    rating: 4.7,
+    reviews: 72340,
+    students: 280000,
+    price: "$69.99",
+    originalPrice: "$129.99",
+    image:
+      "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=450&fit=crop",
+    duration: "32 hours",
+    lectures: 245,
+    level: "Intermediate",
+    category: "Business",
+    color: "from-indigo-500 to-blue-500",
+    bestseller: false,
+  },
+  {
+    id: 7,
+    icon: Code,
+    title: "React - The Complete Guide 2024",
+    instructor: "Maximilian Schwarzmüller",
+    rating: 4.8,
+    reviews: 215680,
+    students: 680000,
+    price: "$89.99",
+    originalPrice: "$149.99",
+    image:
+      "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=450&fit=crop",
+    duration: "48 hours",
+    lectures: 410,
+    level: "All Levels",
+    category: "Web Development",
+    color: "from-blue-500 to-cyan-500",
+    bestseller: true,
+  },
+  {
+    id: 8,
+    icon: Brain,
+    title: "Deep Learning Specialization",
+    instructor: "Andrew Ng",
+    rating: 4.9,
+    reviews: 186540,
+    students: 590000,
+    price: "$99.99",
+    originalPrice: "$169.99",
+    image:
+      "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&h=450&fit=crop",
+    duration: "56 hours",
+    lectures: 385,
+    level: "Advanced",
+    category: "AI & Machine Learning",
+    color: "from-orange-500 to-red-500",
+    bestseller: true,
+  },
+];
 
 const categories = [
   "All Categories",
@@ -221,10 +221,10 @@ const CourseList = ({
 
   const initial = getInitialConverter(user?.name || "Guest");
 
-  // const [searchQuery, setSearchQuery] = useState("");
-  // const [selectedCategory, setSelectedCategory] = useState("All Categories");
-  // const [selectedLevel, setSelectedLevel] = useState("All Levels");
-  // const [sortBy, setSortBy] = useState("Most Popular");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All Categories");
+  const [selectedLevel, setSelectedLevel] = useState("All Levels");
+  const [sortBy, setSortBy] = useState("Most Popular");
 
   return (
     <section id={"courses"} className="min-h-screen bg-background">
@@ -266,7 +266,7 @@ const CourseList = ({
           </motion.div>
 
           {/* Search Bar */}
-          {/* <motion.div
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -281,14 +281,14 @@ const CourseList = ({
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-          </motion.div> */}
+          </motion.div>
         </div>
       </section>
 
       {/* Filters */}
-      <section className="border-b bg-muted/30">
+      <section className="">
         <div className="container mx-auto px-4">
-          {/* <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="flex flex-wrap gap-4 items-center">
               <Select
                 value={selectedCategory}
@@ -332,7 +332,7 @@ const CourseList = ({
                 ))}
               </SelectContent>
             </Select>
-          </div> */}
+          </div>
         </div>
       </section>
 

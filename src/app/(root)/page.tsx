@@ -10,7 +10,7 @@ export default async function Home() {
   const { data: courses, error } = await safeFetch<Course[]>(
     `${API_URL}/courses`,
     { cache: "no-store" },
-    [] // fallback value
+    [], // fallback value
   );
 
   return (

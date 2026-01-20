@@ -120,7 +120,7 @@ const OtpVerificationAuthForm = ({
               setError(error?.response?.data?.message);
             }
           },
-        }
+        },
       );
       return;
     }
@@ -139,11 +139,11 @@ const OtpVerificationAuthForm = ({
           console.log(error);
           if (error?.response?.status === 404) {
             setError(
-              "There was a problem logging in. Check your email or create an account."
+              "There was a problem logging in. Check your email or create an account.",
             );
           }
         },
-      }
+      },
     );
   };
 
@@ -167,6 +167,8 @@ const OtpVerificationAuthForm = ({
 
           const { user } = data;
 
+          console.log("user.role", user.role);
+
           // STUDENT
           if (user.role === UserRole.STUDENT) {
             if (!user.studentProfile) {
@@ -178,14 +180,14 @@ const OtpVerificationAuthForm = ({
           }
 
           // INSTRUCTOR
-          // if (user.role === UserRole.INSTRUCTOR) {
-          //   if (!isProfileComplete) {
-          //     router.replace("/instructor-profile-setup");
-          //     return;
-          //   }
-          //   router.replace("/instructor/courses");
-          //   return;
-          // }
+          if (user.role === UserRole.INSTRUCTOR) {
+            if (!user.instructorProfile) {
+              window.location.replace("/instructor-profile-setup");
+              return;
+            }
+            window.location.replace("/instructor");
+            return;
+          }
 
           // ADMIN
           // router.replace("/admin/dashboard");
@@ -210,7 +212,7 @@ const OtpVerificationAuthForm = ({
             setError(error?.response?.data?.message);
           }
         },
-      }
+      },
     );
   };
 
