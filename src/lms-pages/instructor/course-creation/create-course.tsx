@@ -38,8 +38,9 @@ import { Form } from "@/components/ui/form";
 
 import IntendedLeanersSection from "./intended-learners";
 import CourseMessageSection from "./course-message";
+import CurriculumSection from "./curriculum";
 
-interface Lesson {
+export interface Lecture {
   id: string;
   title: string;
   type: "video" | "text" | "quiz" | "coding" | "assignment";
@@ -47,11 +48,11 @@ interface Lesson {
   isExpanded: boolean;
 }
 
-interface Section {
+export interface Section {
   id: string;
   title: string;
   objective: string;
-  lessons: Lesson[];
+  Lectures: Lecture[];
 }
 
 const categories = [
@@ -156,7 +157,22 @@ export const itemVariants = {
 };
 
 const CreateCourse = () => {
-  const [sections, setSections] = useState<Section[]>([]);
+  const [sections, setSections] = useState<Section[]>([
+    {
+      id: "1",
+      title: "",
+      objective: "",
+      Lectures: [
+        {
+          id: "generateId()",
+          title: "",
+          type: "video",
+          duration: "",
+          isExpanded: false,
+        },
+      ],
+    },
+  ]);
   const [activeSection, setActiveSection] =
     useState<ActiveSection>("intended-learners");
   const [learningObjectives, setLearningObjectives] = useState<string[]>([
@@ -167,15 +183,6 @@ const CreateCourse = () => {
   ]);
   const [prerequisites, setPrerequisites] = useState<string[]>([""]);
   const [targetAudience, setTargetAudience] = useState<string[]>([""]);
-
-  const onLearningObjectivesHandler = (
-    e: ChangeEvent<HTMLInputElement>,
-    index: number,
-  ) => {
-    setLearningObjectives((prev) =>
-      prev.map((obj, i) => (i === index ? e.target.value : obj)),
-    );
-  };
 
   const form = useForm({
     resolver: zodResolver(courseSchema),
@@ -195,7 +202,43 @@ const CreateCourse = () => {
     },
   });
 
-  const addSectionHandler = () => {};
+  const onLearningObjectivesHandler = (
+    e: ChangeEvent<HTMLInputElement>,
+    index: number,
+  ) => {
+    setLearningObjectives((prev) =>
+      prev.map((obj, i) => (i === index ? e.target.value : obj)),
+    );
+  };
+
+  const onAddSectionHandler = () => {
+    setSections((prev) => [
+      ...prev,
+      { id: generateId(), title: "", objective: "", Lectures: [] },
+    ]);
+  };
+
+  const onAddLecture = (sectionId: string, type: Lecture["type"] = "video") => {
+    setSections((prevSec) =>
+      prevSec.map((sec, index) =>
+        sec.id === sectionId
+          ? {
+              ...sec,
+              Lectures: [
+                ...sec.Lectures,
+                {
+                  id: generateId(),
+                  title: "",
+                  type,
+                  duration: "",
+                  isExpanded: true,
+                },
+              ],
+            }
+          : sec,
+      ),
+    );
+  };
 
   const onSubmit = (data: CourseFormData) => {
     console.log("Course data:", {
@@ -226,59 +269,11 @@ const CreateCourse = () => {
         return <CourseMessageSection form={form} />;
       case ACTIVE_SECTIONS.CURRICULUM:
         return (
-          <motion.div
-            key="curriculum"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="space-y-6"
-          >
-            <motion.div
-              variants={itemVariants}
-              className="flex items-start justify-between"
-            >
-              <div>
-                <h2 className="text-2xl font-bold text-foreground mb-2">
-                  Curriculum
-                </h2>
-                <p className="text-muted-foreground">
-                  Start putting together your course by creating sections,
-                  lectures and practice activities.
-                </p>
-              </div>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span>{sections.length} sections</span>
-                <span>•</span>
-                {/* <span>{totalLessons} lectures</span> */}
-              </div>
-            </motion.div>
-
-            {/* Sections */}
-            <motion.div variants={itemVariants} className="space-y-4">
-              <AnimatePresence mode="popLayout">
-                {sections.map((section, sectionIndex) => (
-                  <motion.div
-                    key={section.id}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="border border-border rounded-lg bg-card overflow-hidden"
-                  ></motion.div>
-                ))}
-              </AnimatePresence>
-
-              {/* Add Section Button */}
-              <Button
-                variant="outline"
-                onClick={addSectionHandler}
-                className="w-full border-dashed h-12"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Add Section
-              </Button>
-            </motion.div>
-          </motion.div>
+          <CurriculumSection
+            sections={sections}
+            onAddSectionHandler={onAddSectionHandler}
+            onAddLecture={onAddLecture}
+          />
         );
       case ACTIVE_SECTIONS.LANDING_PAGE:
         return <div>Landing Page Content</div>;
