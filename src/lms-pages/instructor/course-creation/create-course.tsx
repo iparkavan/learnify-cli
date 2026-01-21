@@ -36,9 +36,15 @@ import { ChangeEvent, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 
-import IntendedLeanersSection from "./intended-learners";
-import CourseMessageSection from "./course-message";
-import CurriculumSection from "./curriculum";
+import IntendedLeanersSection from "../../../components/instructor/create-course-comp/intended-learners";
+import CourseMessageSection from "../../../components/instructor/create-course-comp/course-message";
+import CurriculumSection from "../../../components/instructor/create-course-comp/curriculum-section";
+import {
+  LectureContent,
+  LectureContentModal,
+} from "@/components/instructor/create-course-comp/lecture-content";
+import { string } from "zod";
+import { toast } from "sonner";
 
 export interface Lecture {
   id: string;
@@ -46,6 +52,8 @@ export interface Lecture {
   type: "video" | "text" | "quiz" | "coding" | "assignment";
   duration: string;
   isExpanded: boolean;
+  content?: LectureContent;
+  hasContent?: boolean;
 }
 
 export interface Section {
@@ -157,22 +165,7 @@ export const itemVariants = {
 };
 
 const CreateCourse = () => {
-  const [sections, setSections] = useState<Section[]>([
-    {
-      id: "1",
-      title: "",
-      objective: "",
-      Lectures: [
-        {
-          id: "generateId()",
-          title: "",
-          type: "video",
-          duration: "",
-          isExpanded: false,
-        },
-      ],
-    },
-  ]);
+  const [sections, setSections] = useState<Section[]>([]);
   const [activeSection, setActiveSection] =
     useState<ActiveSection>("intended-learners");
   const [learningObjectives, setLearningObjectives] = useState<string[]>([
@@ -183,6 +176,12 @@ const CreateCourse = () => {
   ]);
   const [prerequisites, setPrerequisites] = useState<string[]>([""]);
   const [targetAudience, setTargetAudience] = useState<string[]>([""]);
+
+  const [contentModalOpen, setContentModalOpen] = useState(false);
+  const [selectedLecture, setSelectedLecture] = useState<{
+    sectionId: string;
+    lecture: Lecture;
+  } | null>(null);
 
   const form = useForm({
     resolver: zodResolver(courseSchema),
@@ -211,6 +210,7 @@ const CreateCourse = () => {
     );
   };
 
+  // Section Handlers
   const onAddSectionHandler = () => {
     setSections((prev) => [
       ...prev,
@@ -218,6 +218,20 @@ const CreateCourse = () => {
     ]);
   };
 
+  const updateSectionHandler = (
+    sectionId: string,
+    updates: Partial<Section>,
+  ) => {
+    setSections(
+      sections.map((s) => (s.id === sectionId ? { ...s, ...updates } : s)),
+    );
+  };
+
+  const onDeleteSectionHandler = (sectionId: string) => {
+    setSections((prev) => prev.filter((sec) => sec.id !== sectionId));
+  };
+
+  // Lecture Handlers
   const onAddLecture = (sectionId: string, type: Lecture["type"] = "video") => {
     setSections((prevSec) =>
       prevSec.map((sec, index) =>
@@ -240,6 +254,60 @@ const CreateCourse = () => {
     );
   };
 
+  const onUpdatelectureHandler = (
+    sectionId: string,
+    lectureId: string,
+    updates: Partial<Lecture>,
+  ) => {
+    setSections((prevSection) =>
+      prevSection.map((sec) =>
+        sec.id === sectionId
+          ? {
+              ...sec,
+              Lectures: sec.Lectures.map((lec) =>
+                lec.id === lectureId ? { ...lec, ...updates } : lec,
+              ),
+            }
+          : sec,
+      ),
+    );
+  };
+
+  const onDeletelectureHandler = (sectionId: string, lectureId: string) => {
+    setSections((prevSection) =>
+      prevSection.map((sec) =>
+        sec.id === sectionId
+          ? {
+              ...sec,
+              Lectures: sec.Lectures.filter((lec) => lec.id !== lectureId),
+            }
+          : sec,
+      ),
+    );
+  };
+
+  const openContentModal = (sectionId: string, lecture: Lecture) => {
+    setSelectedLecture({ sectionId, lecture });
+    setContentModalOpen(true);
+  };
+
+  const handleSaveContentHandler = (content: LectureContent) => {
+    if (selectedLecture) {
+      onUpdatelectureHandler(
+        selectedLecture.sectionId,
+        selectedLecture.lecture.id,
+        {
+          content,
+          hasContent: true,
+          duration: content.video?.duration || selectedLecture.lecture.duration,
+        },
+      );
+      toast("Content saved!", {
+        description: "Your lecture content has been saved successfully.",
+      });
+    }
+  };
+
   const onSubmit = (data: CourseFormData) => {
     console.log("Course data:", {
       ...data,
@@ -248,6 +316,26 @@ const CreateCourse = () => {
       prerequisites,
       targetAudience,
     });
+  };
+
+  const totalLectures = sections.reduce(
+    (acc, sec) => acc + sec.Lectures.length,
+    0,
+  );
+
+  // Calculate progress
+  const calculateProgress = () => {
+    let completed = 0;
+    const total = 6;
+
+    if (learningObjectives.filter((o) => o.trim()).length >= 4) completed++;
+    if (sections.length > 0) completed++;
+    if (form.watch("title")) completed++;
+    if (form.watch("description")) completed++;
+    if (form.watch("category")) completed++;
+    if (form.watch("price")) completed++;
+
+    return Math.round((completed / total) * 100);
   };
 
   // console.log(learningObjectives);
@@ -273,6 +361,12 @@ const CreateCourse = () => {
             sections={sections}
             onAddSectionHandler={onAddSectionHandler}
             onAddLecture={onAddLecture}
+            totalLectures={totalLectures}
+            openContentModal={openContentModal}
+            onDeleteSection={onDeleteSectionHandler}
+            onDeletelecture={onDeletelectureHandler}
+            onUpdatelecture={onUpdatelectureHandler}
+            onUpdateSection={updateSectionHandler}
           />
         );
       case ACTIVE_SECTIONS.LANDING_PAGE:
@@ -333,13 +427,12 @@ const CreateCourse = () => {
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Course Progress</span>
                 <span className="font-medium text-foreground">
-                  {/* {calculateProgress()} */}
-                  92%
+                  {calculateProgress()}%
                 </span>
               </div>
               <Progress
-                // value={calculateProgress()}
-                value={92}
+                value={calculateProgress()}
+                // value={92}
                 className="h-2"
               />
             </div>
@@ -392,6 +485,21 @@ const CreateCourse = () => {
           </Form>
         </div>
       </div>
+
+      {/* Content Modal */}
+      {selectedLecture && (
+        <LectureContentModal
+          isOpen={contentModalOpen}
+          onClose={() => {
+            setContentModalOpen(false);
+            setSelectedLecture(null);
+          }}
+          lectureType={selectedLecture.lecture.type}
+          lectureTitle={selectedLecture.lecture.title}
+          initialContent={selectedLecture.lecture.content}
+          onSave={handleSaveContentHandler}
+        />
+      )}
     </SidebarProvider>
   );
 };

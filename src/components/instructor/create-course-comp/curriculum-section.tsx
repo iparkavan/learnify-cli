@@ -4,11 +4,12 @@ import {
   itemVariants,
   Lecture,
   Section,
-} from "./create-course";
+} from "../../../lms-pages/instructor/course-creation/create-course";
 import React from "react";
 import { Button } from "@/components/ui/button";
 import {
   BookOpen,
+  CheckCircle2,
   Code,
   FileText,
   GripVertical,
@@ -18,6 +19,7 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 
 import {
@@ -26,12 +28,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-
-interface CurriculumSectionProps {
-  sections: Section[];
-  onAddSectionHandler: () => void;
-  onAddLecture: (sectionId: string, type: Lecture["type"]) => void;
-}
 
 const getLectureIcon = (type: Lecture["type"]) => {
   switch (type) {
@@ -48,10 +44,32 @@ const getLectureIcon = (type: Lecture["type"]) => {
   }
 };
 
+interface CurriculumSectionProps {
+  sections: Section[];
+  onAddSectionHandler: () => void;
+  onAddLecture: (sectionId: string, type: Lecture["type"]) => void;
+  totalLectures: number;
+  openContentModal: (sectionId: string, lecture: Lecture) => void;
+  onDeleteSection: (sectionId: string) => void;
+  onDeletelecture: (sectionId: string, lectureId: string) => void;
+  onUpdatelecture: (
+    sectionId: string,
+    lectureId: string,
+    update: Partial<Lecture>,
+  ) => void;
+  onUpdateSection: (sectionId: string, updates: Partial<Section>) => void;
+}
+
 const CurriculumSection: React.FC<CurriculumSectionProps> = ({
   sections,
   onAddSectionHandler,
   onAddLecture,
+  totalLectures,
+  openContentModal,
+  onDeleteSection,
+  onDeletelecture,
+  onUpdatelecture,
+  onUpdateSection,
 }) => {
   return (
     <motion.div
@@ -77,7 +95,7 @@ const CurriculumSection: React.FC<CurriculumSectionProps> = ({
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span>{sections.length} sections</span>
           <span>•</span>
-          {/* <span>{totalLessons} lectures</span> */}
+          <span>{totalLectures} lectures</span>
         </div>
       </motion.div>
 
@@ -86,8 +104,7 @@ const CurriculumSection: React.FC<CurriculumSectionProps> = ({
         <AnimatePresence mode="popLayout">
           <Accordion
             type="multiple"
-            // collapsible
-            // className="w-full"
+            defaultValue={sections.map((section) => section.id)}
             className="space-y-4"
             // defaultValue="item-1"
           >
@@ -114,9 +131,11 @@ const CurriculumSection: React.FC<CurriculumSectionProps> = ({
                         </span>
                         <Input
                           value={section.title}
-                          //   onChange={(e) =>
-                          //     updateSection(section.id, { title: e.target.value })
-                          //   }
+                          onChange={(e) =>
+                            onUpdateSection(section.id, {
+                              title: e.target.value,
+                            })
+                          }
                           onClick={(e) => e.stopPropagation()}
                           placeholder="Enter section title"
                           className="flex-1 bg-background border-border h-9"
@@ -124,7 +143,10 @@ const CurriculumSection: React.FC<CurriculumSectionProps> = ({
                         <Button
                           variant="ghost"
                           size="icon"
-                          //   onClick={() => deleteSection(section.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteSection(section.id);
+                          }}
                           className="text-muted-foreground hover:text-destructive"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -134,11 +156,11 @@ const CurriculumSection: React.FC<CurriculumSectionProps> = ({
                         <Input
                           value={section.objective}
                           onClick={(e) => e.stopPropagation()}
-                          //   onChange={(e) =>
-                          //     updateSection(section.id, {
-                          //       objective: e.target.value,
-                          //     })
-                          //   }
+                          onChange={(e) =>
+                            onUpdateSection(section.id, {
+                              objective: e.target.value,
+                            })
+                          }
                           placeholder="What will students be able to do at the end of this section?"
                           className="bg-background border-border text-sm"
                         />
@@ -148,9 +170,9 @@ const CurriculumSection: React.FC<CurriculumSectionProps> = ({
                   <AccordionContent className="flex p-4 flex-col gap-4 text-balance">
                     <div className="space-y-2">
                       <AnimatePresence mode="popLayout">
-                        {section.Lectures.map((lesson, lessonIndex) => (
+                        {section.Lectures.map((lecture, lectureIndex) => (
                           <motion.div
-                            key={lesson.id}
+                            key={lecture.id}
                             layout
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -160,25 +182,38 @@ const CurriculumSection: React.FC<CurriculumSectionProps> = ({
                             <div className="p-2 flex items-center gap-3">
                               <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
                               <div className="flex items-center gap-2 text-muted-foreground">
-                                {getLectureIcon(lesson.type)}
+                                {getLectureIcon(lecture.type)}
                                 <span className="text-xs capitalize">
-                                  {lesson.type}
+                                  {lecture.type}
                                 </span>
                               </div>
                               <Input
-                                value={lesson.title}
-                                // onChange={(e) =>
-                                //   updateLesson(section.id, lesson.id, {
-                                //     title: e.target.value,
-                                //   })
-                                // }
+                                value={lecture.title}
+                                onChange={(e) =>
+                                  onUpdatelecture(section.id, lecture.id, {
+                                    title: e.target.value,
+                                  })
+                                }
                                 placeholder="Enter lecture title"
                                 className="flex-1 bg-transparent border p-2 h-auto focus-visible:ring-0"
                               />
+
+                              {lecture.hasContent ? (
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-primary/10 text-primary"
+                                >
+                                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                                  Content Added
+                                </Badge>
+                              ) : null}
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 className="text-primary hover:text-white"
+                                onClick={() =>
+                                  openContentModal(section.id, lecture)
+                                }
                               >
                                 <Upload className="h-4 w-4 mr-1" />
                                 Content
@@ -186,9 +221,9 @@ const CurriculumSection: React.FC<CurriculumSectionProps> = ({
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                // onClick={() =>
-                                //   deleteLesson(section.id, lesson.id)
-                                // }
+                                onClick={() =>
+                                  onDeletelecture(section.id, lecture.id)
+                                }
                                 className="text-muted-foreground hover:text-destructive h-8 w-8"
                               >
                                 <Trash2 className="h-4 w-4" />

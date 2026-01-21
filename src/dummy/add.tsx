@@ -69,22 +69,28 @@ import {
   ChevronDown,
   LayoutDashboard,
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import {
+  lectureContentModal,
+  lectureContent,
+} from "@/components/curriculum/lectureContentModal";
+import { toast } from "sonner";
 
 // Types
-interface Lesson {
+interface lecture {
   id: string;
   title: string;
   type: "video" | "text" | "quiz" | "coding" | "assignment";
   duration: string;
   isExpanded?: boolean;
+  content?: lectureContent;
+  hasContent?: boolean;
 }
 
 interface Section {
   id: string;
   title: string;
   objective: string;
-  lessons: Lesson[];
+  lectures: lecture[];
 }
 
 // Form Schema
@@ -194,7 +200,6 @@ const itemVariants = {
 };
 
 const AddCourse = () => {
-  const { toast } = useToast();
   const [sections, setSections] = useState<Section[]>([]);
   const [activeSection, setActiveSection] =
     useState<ActiveSection>("intended-learners");
@@ -207,6 +212,12 @@ const AddCourse = () => {
   const [prerequisites, setPrerequisites] = useState<string[]>([""]);
   const [targetAudience, setTargetAudience] = useState<string[]>([""]);
 
+  // Content modal state
+  const [contentModalOpen, setContentModalOpen] = useState(false);
+  const [selectedlecture, setSelectedlecture] = useState<{
+    sectionId: string;
+    lecture: lecture;
+  } | null>(null);
   const form = useForm<CourseFormData>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
@@ -229,7 +240,7 @@ const AddCourse = () => {
   const addSection = () => {
     setSections([
       ...sections,
-      { id: generateId(), title: "", objective: "", lessons: [] },
+      { id: generateId(), title: "", objective: "", lectures: [] },
     ]);
   };
 
@@ -243,15 +254,15 @@ const AddCourse = () => {
     setSections(sections.filter((s) => s.id !== sectionId));
   };
 
-  // Lesson handlers
-  const addLesson = (sectionId: string, type: Lesson["type"] = "video") => {
+  // lecture handlers
+  const addlecture = (sectionId: string, type: lecture["type"] = "video") => {
     setSections(
       sections.map((s) => {
         if (s.id === sectionId) {
           return {
             ...s,
-            lessons: [
-              ...s.lessons,
+            lectures: [
+              ...s.lectures,
               {
                 id: generateId(),
                 title: "",
@@ -267,18 +278,18 @@ const AddCourse = () => {
     );
   };
 
-  const updateLesson = (
+  const updatelecture = (
     sectionId: string,
-    lessonId: string,
-    updates: Partial<Lesson>,
+    lectureId: string,
+    updates: Partial<lecture>,
   ) => {
     setSections(
       sections.map((s) => {
         if (s.id === sectionId) {
           return {
             ...s,
-            lessons: s.lessons.map((l) =>
-              l.id === lessonId ? { ...l, ...updates } : l,
+            lectures: s.lectures.map((l) =>
+              l.id === lectureId ? { ...l, ...updates } : l,
             ),
           };
         }
@@ -287,13 +298,31 @@ const AddCourse = () => {
     );
   };
 
-  const deleteLesson = (sectionId: string, lessonId: string) => {
+  const openContentModal = (sectionId: string, lecture: lecture) => {
+    setSelectedlecture({ sectionId, lecture });
+    setContentModalOpen(true);
+  };
+
+  const handleSaveContent = (content: lectureContent) => {
+    if (selectedlecture) {
+      updatelecture(selectedlecture.sectionId, selectedlecture.lecture.id, {
+        content,
+        hasContent: true,
+        duration: content.video?.duration || selectedlecture.lecture.duration,
+      });
+      toast("Content saved!", {
+        description: "Your lecture content has been saved successfully.",
+      });
+    }
+  };
+
+  const deletelecture = (sectionId: string, lectureId: string) => {
     setSections(
       sections.map((s) => {
         if (s.id === sectionId) {
           return {
             ...s,
-            lessons: s.lessons.filter((l) => l.id !== lessonId),
+            lectures: s.lectures.filter((l) => l.id !== lectureId),
           };
         }
         return s;
@@ -309,13 +338,12 @@ const AddCourse = () => {
       prerequisites,
       targetAudience,
     });
-    toast({
-      title: "Course Submitted!",
+    toast("Course Submitted!", {
       description: "Your course has been submitted for review.",
     });
   };
 
-  const totalLessons = sections.reduce((acc, s) => acc + s.lessons.length, 0);
+  const totallectures = sections.reduce((acc, s) => acc + s.lectures.length, 0);
 
   // Calculate progress
   const calculateProgress = () => {
@@ -332,7 +360,7 @@ const AddCourse = () => {
     return Math.round((completed / total) * 100);
   };
 
-  const getLessonIcon = (type: Lesson["type"]) => {
+  const getlectureIcon = (type: lecture["type"]) => {
     switch (type) {
       case "video":
         return <Play className="h-4 w-4" />;
@@ -628,7 +656,7 @@ const AddCourse = () => {
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span>{sections.length} sections</span>
                 <span>•</span>
-                <span>{totalLessons} lectures</span>
+                <span>{totallectures} lectures</span>
               </div>
             </motion.div>
 
@@ -682,12 +710,12 @@ const AddCourse = () => {
                       </div>
                     </div>
 
-                    {/* Lessons */}
+                    {/* lectures */}
                     <div className="p-4 space-y-2">
                       <AnimatePresence mode="popLayout">
-                        {section.lessons.map((lesson, lessonIndex) => (
+                        {section.lectures.map((lecture, lectureIndex) => (
                           <motion.div
-                            key={lesson.id}
+                            key={lecture.id}
                             layout
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -697,34 +725,46 @@ const AddCourse = () => {
                             <div className="p-3 flex items-center gap-3">
                               <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
                               <div className="flex items-center gap-2 text-muted-foreground">
-                                {getLessonIcon(lesson.type)}
+                                {getlectureIcon(lecture.type)}
                                 <span className="text-xs capitalize">
-                                  {lesson.type}
+                                  {lecture.type}
                                 </span>
                               </div>
                               <Input
-                                value={lesson.title}
+                                value={lecture.title}
                                 onChange={(e) =>
-                                  updateLesson(section.id, lesson.id, {
+                                  updatelecture(section.id, lecture.id, {
                                     title: e.target.value,
                                   })
                                 }
                                 placeholder="Enter lecture title"
                                 className="flex-1 bg-transparent border-0 p-0 h-auto focus-visible:ring-0"
                               />
+                              {lecture.hasContent ? (
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-primary/10 text-primary"
+                                >
+                                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                                  Content Added
+                                </Badge>
+                              ) : null}
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                onClick={() =>
+                                  openContentModal(section.id, lecture)
+                                }
                                 className="text-primary hover:text-primary"
                               >
                                 <Upload className="h-4 w-4 mr-1" />
-                                Content
+                                {lecture.hasContent ? "Edit" : "Add"} Content
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() =>
-                                  deleteLesson(section.id, lesson.id)
+                                  deletelecture(section.id, lecture.id)
                                 }
                                 className="text-muted-foreground hover:text-destructive h-8 w-8"
                               >
@@ -740,7 +780,7 @@ const AddCourse = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => addLesson(section.id, "video")}
+                          onClick={() => addlecture(section.id, "video")}
                           className="border-dashed"
                         >
                           <Plus className="h-4 w-4 mr-1" />
@@ -749,7 +789,7 @@ const AddCourse = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => addLesson(section.id, "quiz")}
+                          onClick={() => addlecture(section.id, "quiz")}
                           className="border-dashed"
                         >
                           <Plus className="h-4 w-4 mr-1" />
@@ -758,7 +798,7 @@ const AddCourse = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => addLesson(section.id, "coding")}
+                          onClick={() => addlecture(section.id, "coding")}
                           className="border-dashed"
                         >
                           <Plus className="h-4 w-4 mr-1" />
@@ -767,7 +807,7 @@ const AddCourse = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => addLesson(section.id, "assignment")}
+                          onClick={() => addlecture(section.id, "assignment")}
                           className="border-dashed"
                         >
                           <Plus className="h-4 w-4 mr-1" />
@@ -1245,6 +1285,21 @@ const AddCourse = () => {
           </main>
         </div>
       </div>
+
+      {/* Content Modal */}
+      {selectedlecture && (
+        <lectureContentModal
+          isOpen={contentModalOpen}
+          onClose={() => {
+            setContentModalOpen(false);
+            setSelectedlecture(null);
+          }}
+          lectureType={selectedlecture.lecture.type}
+          lectureTitle={selectedlecture.lecture.title}
+          initialContent={selectedlecture.lecture.content}
+          onSave={handleSaveContent}
+        />
+      )}
     </SidebarProvider>
   );
 };

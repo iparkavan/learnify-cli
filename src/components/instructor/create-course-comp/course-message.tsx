@@ -13,7 +13,10 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import IntendedLeaners from "./intended-learners";
-import { containerVariants, itemVariants } from "./create-course";
+import {
+  containerVariants,
+  itemVariants,
+} from "../../../lms-pages/instructor/course-creation/create-course";
 import { CourseFormData } from "@/schema/course-schema";
 import { UseFormReturn } from "react-hook-form";
 
