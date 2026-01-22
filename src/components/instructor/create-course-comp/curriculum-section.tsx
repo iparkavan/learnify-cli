@@ -5,7 +5,7 @@ import {
   Lecture,
   Section,
 } from "../../../lms-pages/instructor/course-creation/create-course";
-import React from "react";
+import React, { Dispatch, SetStateAction } from "react";
 import { Button } from "@/components/ui/button";
 import {
   BookOpen,
@@ -58,6 +58,8 @@ interface CurriculumSectionProps {
     update: Partial<Lecture>,
   ) => void;
   onUpdateSection: (sectionId: string, updates: Partial<Section>) => void;
+  openAccordionSections: string[];
+  setOpenAccordionSections: Dispatch<SetStateAction<string[]>>;
 }
 
 const CurriculumSection: React.FC<CurriculumSectionProps> = ({
@@ -70,6 +72,8 @@ const CurriculumSection: React.FC<CurriculumSectionProps> = ({
   onDeletelecture,
   onUpdatelecture,
   onUpdateSection,
+  openAccordionSections,
+  setOpenAccordionSections,
 }) => {
   return (
     <motion.div
@@ -103,21 +107,24 @@ const CurriculumSection: React.FC<CurriculumSectionProps> = ({
       <motion.div variants={itemVariants} className="space-y-4">
         <AnimatePresence mode="popLayout">
           <Accordion
+            // type="multiple"
+            // defaultValue={sections.map((section) => String(section.id))}
+            // className="space-y-4"
             type="multiple"
-            defaultValue={sections.map((section) => section.id)}
+            value={openAccordionSections}
+            onValueChange={setOpenAccordionSections}
             className="space-y-4"
             // defaultValue="item-1"
           >
             {sections.map((section, sectionIndex) => (
-              <motion.div
-                key={section.id}
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="border border-border rounded-lg bg-card overflow-hidden"
-              >
-                <AccordionItem value={section.id}>
+              <AccordionItem key={section.id} value={String(section.id)}>
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="border border-border rounded-lg bg-card overflow-hidden"
+                >
                   <AccordionTrigger
                     className="bg-muted/50 p-4 border-b border-border flex items-center"
                     // onClick={(e) => e.preventDefault()}
@@ -274,8 +281,8 @@ const CurriculumSection: React.FC<CurriculumSectionProps> = ({
                       </div>
                     </div>
                   </AccordionContent>
-                </AccordionItem>
-              </motion.div>
+                </motion.div>
+              </AccordionItem>
             ))}
           </Accordion>
         </AnimatePresence>

@@ -32,7 +32,7 @@ import {
   Target,
 } from "lucide-react";
 import Link from "next/link";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 
@@ -45,6 +45,9 @@ import {
 } from "@/components/instructor/create-course-comp/lecture-content";
 import { string } from "zod";
 import { toast } from "sonner";
+import CourseLandingPageSection from "@/components/instructor/create-course-comp/course-landing-page";
+import CoursePricingSection from "@/components/instructor/create-course-comp/course-pricing";
+import CoursePromotionSection from "@/components/instructor/create-course-comp/course-promotions";
 
 export interface Lecture {
   id: string;
@@ -182,6 +185,13 @@ const CreateCourse = () => {
     sectionId: string;
     lecture: Lecture;
   } | null>(null);
+  const [openAccordionSections, setOpenAccordionSections] = useState<string[]>(
+    [],
+  );
+
+  useEffect(() => {
+    setOpenAccordionSections(sections.map((s) => String(s.id)));
+  }, [sections]);
 
   const form = useForm({
     resolver: zodResolver(courseSchema),
@@ -367,14 +377,23 @@ const CreateCourse = () => {
             onDeletelecture={onDeletelectureHandler}
             onUpdatelecture={onUpdatelectureHandler}
             onUpdateSection={updateSectionHandler}
+            openAccordionSections={openAccordionSections}
+            setOpenAccordionSections={setOpenAccordionSections}
           />
         );
       case ACTIVE_SECTIONS.LANDING_PAGE:
-        return <div>Landing Page Content</div>;
+        return (
+          <CourseLandingPageSection
+            form={form}
+            categories={categories}
+            levels={levels}
+            languages={languages}
+          />
+        );
       case ACTIVE_SECTIONS.PRICING:
-        return <div>Pricing Content</div>;
+        return <CoursePricingSection form={form} />;
       case ACTIVE_SECTIONS.PROMOTIONS:
-        return <div>Promotions Content</div>;
+        return <CoursePromotionSection />;
       case ACTIVE_SECTIONS.INTENDED_LEARNERS:
         return <div>Intended Learners Content</div>;
     }

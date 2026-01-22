@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -899,8 +900,9 @@ export const LectureContentModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      {/* <DialogContent className="  overflow-hidden"> */}
+      <DialogContent className="max-w-3xl! max-h-[90vh] rounded-2xl overflow-hidden p-0">
+        <DialogHeader className="sticky top-0 z-10 bg-background border-b px-6 py-4 flex flex-row items-center justify-between">
           <DialogTitle className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
               {getModalIcon()}
@@ -912,19 +914,27 @@ export const LectureContentModal = ({
               </p>
             </div>
           </DialogTitle>
+
+          {/* CLOSE BUTTON */}
+          <DialogClose asChild>
+            <button className="rounded-md p-2 hover:bg-muted transition">
+              <X className="h-5 w-5" />
+            </button>
+          </DialogClose>
         </DialogHeader>
 
-        <div className="py-4">
+        {/* SCROLLABLE BODY */}
+        <div className="h-[75vh] overflow-y-auto p-6 space-y-6">
           {lectureType === "video" && renderVideoContent()}
           {lectureType === "quiz" && renderQuizContent()}
           {lectureType === "coding" && renderCodingContent()}
           {lectureType === "assignment" && renderAssignmentContent()}
 
-          {/* Resources section for all types */}
           {lectureType !== "quiz" && renderResources()}
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-border">
+        {/* FOOTER */}
+        <div className="sticky bottom-0 bg-background border-t px-6 py-4 flex justify-end gap-3">
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
