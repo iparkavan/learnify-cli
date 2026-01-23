@@ -33,6 +33,9 @@ import {
   Clock,
   GripVertical,
 } from "lucide-react";
+import axios, { AxiosProgressEvent } from "axios";
+import { CloudinaryUploadResponse } from "@/types/cloudinary-types";
+import axiosClient from "@/utils/axios-client";
 
 // Types
 export interface VideoContent {
@@ -159,35 +162,85 @@ export const LectureContentModal = ({
     initialContent?.description || "",
   );
 
-  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setIsUploading(true);
-      setVideoContent({
-        file,
-        fileName: file.name,
-        fileSize: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-        uploadProgress: 0,
-      });
+    if (!file) return;
 
-      // Simulate upload progress
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += Math.random() * 15;
-        if (progress >= 100) {
-          progress = 100;
-          clearInterval(interval);
-          setIsUploading(false);
-          setVideoContent((prev) => ({
-            ...prev,
-            uploadProgress: 100,
-            isUploaded: true,
-            duration: "10:30", // This would be calculated from actual video
-          }));
-        }
-        setVideoContent((prev) => ({ ...prev, uploadProgress: progress }));
-      }, 300);
+    setIsUploading(true);
+
+    // Show file info instantly
+    setVideoContent({
+      file,
+      fileName: file.name,
+      fileSize: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+      uploadProgress: 0,
+    });
+
+    const sigRes = await axiosClient("/cloudinary-signature");
+    const sigData = await sigRes.data;
+
+    const formData = new FormData();
+    // formData.append("file", file);
+    // formData.append("upload_preset", "course_video_upload");
+    // formData.append("resource_type", "video");
+    formData.append("file", file);
+    formData.append("api_key", sigData.apiKey);
+    formData.append("timestamp", sigData.timestamp);
+    formData.append("signature", sigData.signature);
+    formData.append("folder", "courses/lectures/videos");
+
+    try {
+      const res = await axios.post<CloudinaryUploadResponse>(
+        `https://api.cloudinary.com/v1_1/${sigData.cloudName}/video/upload`,
+        formData,
+        {
+          onUploadProgress: (progressEvent: AxiosProgressEvent) => {
+            const percent = Math.round(
+              (progressEvent.loaded * 100) / (progressEvent.total || 1),
+            );
+
+            setVideoContent((prev) => ({
+              ...prev,
+              uploadProgress: percent,
+            }));
+          },
+        },
+      );
+
+      const videoUrl: string = res.data.secure_url;
+
+      setVideoContent((prev) => ({
+        ...prev,
+        uploadProgress: 100,
+        isUploaded: true,
+        url: videoUrl,
+        duration: String(res.data.duration),
+      }));
+
+      setIsUploading(false);
+    } catch (error) {
+      console.log(error);
+      alert("Video upload failed");
+      setIsUploading(false);
     }
+
+    // // Simulate upload progress
+    // let progress = 0;
+    // const interval = setInterval(() => {
+    //   progress += Math.random() * 15;
+    //   if (progress >= 100) {
+    //     progress = 100;
+    //     clearInterval(interval);
+    //     setIsUploading(false);
+    //     setVideoContent((prev) => ({
+    //       ...prev,
+    //       uploadProgress: 100,
+    //       isUploaded: true,
+    //       duration: "10:30", // This would be calculated from actual video
+    //     }));
+    //   }
+    //   setVideoContent((prev) => ({ ...prev, uploadProgress: progress }));
+    // }, 300);
   };
 
   const handleResourceUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

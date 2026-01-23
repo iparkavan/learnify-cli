@@ -394,8 +394,8 @@ const CreateCourse = () => {
         return <CoursePricingSection form={form} />;
       case ACTIVE_SECTIONS.PROMOTIONS:
         return <CoursePromotionSection />;
-      case ACTIVE_SECTIONS.INTENDED_LEARNERS:
-        return <div>Intended Learners Content</div>;
+      default:
+        return null;
     }
   };
 
@@ -482,11 +482,11 @@ const CreateCourse = () => {
                     </Button>
 
                     {/* ✅ NOW THIS WORKS */}
-                    <Button type="submit" variant="outline">
+                    <Button type="submit">
                       <Save className="mr-2 h-4 w-4" />
                       Save
                     </Button>
-                    <Button className="bg-primary hover:opacity-90">
+                    <Button className="bg-gradient-primary hover:opacity-90">
                       Submit for Review
                     </Button>
                   </div>

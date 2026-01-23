@@ -1,3 +1,4 @@
+import HeadFootLayout from "@/components/common/head-foot-layout";
 import Footer from "@/lms-pages/landing-page/Footer";
 import LandingPage from "@/lms-pages/landing-page/landing";
 import Navbar from "@/lms-pages/landing-page/NavBar";
@@ -15,9 +16,11 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
-      <LandingPage courses={courses} error={error ?? ""} />
-      <Footer />
+      {/* <Navbar /> */}
+      <HeadFootLayout>
+        <LandingPage courses={courses} error={error ?? ""} />
+      </HeadFootLayout>
+      {/* <Footer /> */}
     </div>
   );
 }

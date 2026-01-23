@@ -4,6 +4,21 @@ import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { arrayMove } from "@dnd-kit/sortable";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -69,20 +84,21 @@ import {
   ChevronDown,
   LayoutDashboard,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import {
-  lectureContentModal,
-  lectureContent,
-} from "@/components/curriculum/lectureContentModal";
-import { toast } from "sonner";
+  LectureContentModal,
+  LectureContent,
+} from "@/components/curriculum/LectureContentModal";
+import { SortableSection } from "@/components/curriculum/SortableSection";
 
 // Types
-interface lecture {
+interface Lecture {
   id: string;
   title: string;
   type: "video" | "text" | "quiz" | "coding" | "assignment";
   duration: string;
   isExpanded?: boolean;
-  content?: lectureContent;
+  content?: LectureContent;
   hasContent?: boolean;
 }
 
@@ -90,7 +106,7 @@ interface Section {
   id: string;
   title: string;
   objective: string;
-  lectures: lecture[];
+  lectures: Lecture[];
 }
 
 // Form Schema
@@ -200,6 +216,7 @@ const itemVariants = {
 };
 
 const AddCourse = () => {
+  const { toast } = useToast();
   const [sections, setSections] = useState<Section[]>([]);
   const [activeSection, setActiveSection] =
     useState<ActiveSection>("intended-learners");
@@ -214,9 +231,9 @@ const AddCourse = () => {
 
   // Content modal state
   const [contentModalOpen, setContentModalOpen] = useState(false);
-  const [selectedlecture, setSelectedlecture] = useState<{
+  const [selectedLecture, setSelectedLecture] = useState<{
     sectionId: string;
-    lecture: lecture;
+    lecture: Lecture;
   } | null>(null);
   const form = useForm<CourseFormData>({
     resolver: zodResolver(courseSchema),
@@ -254,8 +271,8 @@ const AddCourse = () => {
     setSections(sections.filter((s) => s.id !== sectionId));
   };
 
-  // lecture handlers
-  const addlecture = (sectionId: string, type: lecture["type"] = "video") => {
+  // Lecture handlers
+  const addLecture = (sectionId: string, type: Lecture["type"] = "video") => {
     setSections(
       sections.map((s) => {
         if (s.id === sectionId) {
@@ -278,10 +295,10 @@ const AddCourse = () => {
     );
   };
 
-  const updatelecture = (
+  const updateLecture = (
     sectionId: string,
     lectureId: string,
-    updates: Partial<lecture>,
+    updates: Partial<Lecture>,
   ) => {
     setSections(
       sections.map((s) => {
@@ -298,25 +315,26 @@ const AddCourse = () => {
     );
   };
 
-  const openContentModal = (sectionId: string, lecture: lecture) => {
-    setSelectedlecture({ sectionId, lecture });
+  const openContentModal = (sectionId: string, lecture: Lecture) => {
+    setSelectedLecture({ sectionId, lecture });
     setContentModalOpen(true);
   };
 
-  const handleSaveContent = (content: lectureContent) => {
-    if (selectedlecture) {
-      updatelecture(selectedlecture.sectionId, selectedlecture.lecture.id, {
+  const handleSaveContent = (content: LectureContent) => {
+    if (selectedLecture) {
+      updateLecture(selectedLecture.sectionId, selectedLecture.lecture.id, {
         content,
         hasContent: true,
-        duration: content.video?.duration || selectedlecture.lecture.duration,
+        duration: content.video?.duration || selectedLecture.lecture.duration,
       });
-      toast("Content saved!", {
+      toast({
+        title: "Content saved!",
         description: "Your lecture content has been saved successfully.",
       });
     }
   };
 
-  const deletelecture = (sectionId: string, lectureId: string) => {
+  const deleteLecture = (sectionId: string, lectureId: string) => {
     setSections(
       sections.map((s) => {
         if (s.id === sectionId) {
@@ -330,6 +348,53 @@ const AddCourse = () => {
     );
   };
 
+  // Drag and drop handlers
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  const handleSectionDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = sections.findIndex((s) => s.id === active.id);
+      const newIndex = sections.findIndex((s) => s.id === over.id);
+      setSections(arrayMove(sections, oldIndex, newIndex));
+      toast({
+        title: "Section reordered",
+        description: "Your curriculum has been updated.",
+      });
+    }
+  };
+
+  const handleReorderLectures = (
+    sectionId: string,
+    oldIndex: number,
+    newIndex: number,
+  ) => {
+    setSections(
+      sections.map((s) => {
+        if (s.id === sectionId) {
+          return {
+            ...s,
+            lectures: arrayMove(s.lectures, oldIndex, newIndex),
+          };
+        }
+        return s;
+      }),
+    );
+    toast({
+      title: "Lecture reordered",
+      description: "Your curriculum has been updated.",
+    });
+  };
+
   const onSubmit = (data: CourseFormData) => {
     console.log("Course data:", {
       ...data,
@@ -338,12 +403,13 @@ const AddCourse = () => {
       prerequisites,
       targetAudience,
     });
-    toast("Course Submitted!", {
+    toast({
+      title: "Course Submitted!",
       description: "Your course has been submitted for review.",
     });
   };
 
-  const totallectures = sections.reduce((acc, s) => acc + s.lectures.length, 0);
+  const totalLectures = sections.reduce((acc, s) => acc + s.lectures.length, 0);
 
   // Calculate progress
   const calculateProgress = () => {
@@ -360,7 +426,7 @@ const AddCourse = () => {
     return Math.round((completed / total) * 100);
   };
 
-  const getlectureIcon = (type: lecture["type"]) => {
+  const getLectureIcon = (type: Lecture["type"]) => {
     switch (type) {
       case "video":
         return <Play className="h-4 w-4" />;
@@ -651,173 +717,47 @@ const AddCourse = () => {
                 <p className="text-muted-foreground">
                   Start putting together your course by creating sections,
                   lectures and practice activities.
+                  <span className="block text-sm mt-1 text-primary">
+                    Drag sections and lectures to reorder them.
+                  </span>
                 </p>
               </div>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span>{sections.length} sections</span>
                 <span>•</span>
-                <span>{totallectures} lectures</span>
+                <span>{totalLectures} lectures</span>
               </div>
             </motion.div>
 
-            {/* Sections */}
+            {/* Sections with Drag and Drop */}
             <motion.div variants={itemVariants} className="space-y-4">
-              <AnimatePresence mode="popLayout">
-                {sections.map((section, sectionIndex) => (
-                  <motion.div
-                    key={section.id}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="border border-border rounded-lg bg-card overflow-hidden"
-                  >
-                    {/* Section Header */}
-                    <div className="bg-muted/50 p-4 border-b border-border">
-                      <div className="flex items-center gap-3">
-                        <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab" />
-                        <span className="font-semibold text-foreground">
-                          Section {sectionIndex + 1}:
-                        </span>
-                        <Input
-                          value={section.title}
-                          onChange={(e) =>
-                            updateSection(section.id, { title: e.target.value })
-                          }
-                          placeholder="Enter section title"
-                          className="flex-1 bg-background border-border h-9"
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => deleteSection(section.id)}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="mt-3 pl-8">
-                        <Input
-                          value={section.objective}
-                          onChange={(e) =>
-                            updateSection(section.id, {
-                              objective: e.target.value,
-                            })
-                          }
-                          placeholder="What will students be able to do at the end of this section?"
-                          className="bg-background border-border text-sm"
-                        />
-                      </div>
-                    </div>
-
-                    {/* lectures */}
-                    <div className="p-4 space-y-2">
-                      <AnimatePresence mode="popLayout">
-                        {section.lectures.map((lecture, lectureIndex) => (
-                          <motion.div
-                            key={lecture.id}
-                            layout
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                            className="border border-border rounded-lg bg-background"
-                          >
-                            <div className="p-3 flex items-center gap-3">
-                              <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
-                              <div className="flex items-center gap-2 text-muted-foreground">
-                                {getlectureIcon(lecture.type)}
-                                <span className="text-xs capitalize">
-                                  {lecture.type}
-                                </span>
-                              </div>
-                              <Input
-                                value={lecture.title}
-                                onChange={(e) =>
-                                  updatelecture(section.id, lecture.id, {
-                                    title: e.target.value,
-                                  })
-                                }
-                                placeholder="Enter lecture title"
-                                className="flex-1 bg-transparent border-0 p-0 h-auto focus-visible:ring-0"
-                              />
-                              {lecture.hasContent ? (
-                                <Badge
-                                  variant="secondary"
-                                  className="bg-primary/10 text-primary"
-                                >
-                                  <CheckCircle2 className="h-3 w-3 mr-1" />
-                                  Content Added
-                                </Badge>
-                              ) : null}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  openContentModal(section.id, lecture)
-                                }
-                                className="text-primary hover:text-primary"
-                              >
-                                <Upload className="h-4 w-4 mr-1" />
-                                {lecture.hasContent ? "Edit" : "Add"} Content
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  deletelecture(section.id, lecture.id)
-                                }
-                                className="text-muted-foreground hover:text-destructive h-8 w-8"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </AnimatePresence>
-
-                      {/* Add Curriculum Item */}
-                      <div className="flex items-center gap-2 pt-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => addlecture(section.id, "video")}
-                          className="border-dashed"
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          Lecture
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => addlecture(section.id, "quiz")}
-                          className="border-dashed"
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          Quiz
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => addlecture(section.id, "coding")}
-                          className="border-dashed"
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          Coding Exercise
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => addlecture(section.id, "assignment")}
-                          className="border-dashed"
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          Assignment
-                        </Button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleSectionDragEnd}
+              >
+                <SortableContext
+                  items={sections.map((s) => s.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <AnimatePresence mode="popLayout">
+                    {sections.map((section, sectionIndex) => (
+                      <SortableSection
+                        key={section.id}
+                        section={section}
+                        sectionIndex={sectionIndex}
+                        onUpdateSection={updateSection}
+                        onDeleteSection={deleteSection}
+                        onAddLecture={addLecture}
+                        onUpdateLecture={updateLecture}
+                        onDeleteLecture={deleteLecture}
+                        onOpenContentModal={openContentModal}
+                        onReorderLectures={handleReorderLectures}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </SortableContext>
+              </DndContext>
 
               {/* Add Section Button */}
               <Button
@@ -1287,16 +1227,16 @@ const AddCourse = () => {
       </div>
 
       {/* Content Modal */}
-      {selectedlecture && (
-        <lectureContentModal
+      {selectedLecture && (
+        <LectureContentModal
           isOpen={contentModalOpen}
           onClose={() => {
             setContentModalOpen(false);
-            setSelectedlecture(null);
+            setSelectedLecture(null);
           }}
-          lectureType={selectedlecture.lecture.type}
-          lectureTitle={selectedlecture.lecture.title}
-          initialContent={selectedlecture.lecture.content}
+          lectureType={selectedLecture.lecture.type}
+          lectureTitle={selectedLecture.lecture.title}
+          initialContent={selectedLecture.lecture.content}
           onSave={handleSaveContent}
         />
       )}
