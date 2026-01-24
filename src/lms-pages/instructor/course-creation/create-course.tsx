@@ -189,6 +189,19 @@ const CreateCourse = () => {
     [],
   );
 
+  const [imageUploading, setImageUploading] = useState(false);
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [videoUploadProgress, setVideoUploadProgress] = useState(0);
+  const [courseImage, setCourseImage] = useState<{
+    file: File;
+    preview: string;
+  } | null>(null);
+  const [promoVideo, setPromoVideo] = useState<{
+    file: File;
+    name: string;
+    size: string;
+  } | null>(null);
+
   useEffect(() => {
     setOpenAccordionSections(sections.map((s) => String(s.id)));
   }, [sections]);
@@ -210,6 +223,79 @@ const CreateCourse = () => {
       congratsMessage: "",
     },
   });
+
+  // Handle course image upload
+  const handleCourseImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast("Invalid file type", {
+          description: "Please upload an image file (jpg, jpeg, gif, or png).",
+        });
+        return;
+      }
+
+      setImageUploading(true);
+      const preview = URL.createObjectURL(file);
+
+      // Simulate upload delay
+      setTimeout(() => {
+        setCourseImage({ file, preview });
+        setImageUploading(false);
+        toast("Image uploaded!", {
+          description: "Your course image has been uploaded successfully.",
+        });
+      }, 1000);
+    }
+  };
+
+  // Handle promo video upload
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("video/")) {
+        toast("Invalid file type", {
+          description: "Please upload a video file.",
+        });
+        return;
+      }
+
+      setVideoUploading(true);
+      setVideoUploadProgress(0);
+
+      // Simulate upload progress
+      const interval = setInterval(() => {
+        setVideoUploadProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setVideoUploading(false);
+            const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+            setPromoVideo({ file, name: file.name, size: `${sizeInMB} MB` });
+            toast("Video uploaded!", {
+              description:
+                "Your promotional video has been uploaded successfully.",
+            });
+            return 100;
+          }
+          return prev + 10;
+        });
+      }, 200);
+    }
+  };
+
+  // Remove course image
+  const removeCourseImage = () => {
+    if (courseImage?.preview) {
+      URL.revokeObjectURL(courseImage.preview);
+    }
+    setCourseImage(null);
+  };
+
+  // Remove promo video
+  const removePromoVideo = () => {
+    setPromoVideo(null);
+    setVideoUploadProgress(0);
+  };
 
   const onLearningObjectivesHandler = (
     e: ChangeEvent<HTMLInputElement>,
@@ -388,6 +474,15 @@ const CreateCourse = () => {
             categories={categories}
             levels={levels}
             languages={languages}
+            onCourseImageUpload={handleCourseImageUpload}
+            imageUploading={imageUploading}
+            courseImage={courseImage}
+            onRemoveCourseImage={removeCourseImage}
+            onVideoUpload={handleVideoUpload}
+            videoUploading={videoUploading}
+            promoVideo={promoVideo}
+            onRemovePromoVideo={removePromoVideo}
+            videoUploadProgress={videoUploadProgress}
           />
         );
       case ACTIVE_SECTIONS.PRICING:

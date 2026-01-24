@@ -180,9 +180,6 @@ export const LectureContentModal = ({
     const sigData = await sigRes.data;
 
     const formData = new FormData();
-    // formData.append("file", file);
-    // formData.append("upload_preset", "course_video_upload");
-    // formData.append("resource_type", "video");
     formData.append("file", file);
     formData.append("api_key", sigData.apiKey);
     formData.append("timestamp", sigData.timestamp);
@@ -223,24 +220,6 @@ export const LectureContentModal = ({
       alert("Video upload failed");
       setIsUploading(false);
     }
-
-    // // Simulate upload progress
-    // let progress = 0;
-    // const interval = setInterval(() => {
-    //   progress += Math.random() * 15;
-    //   if (progress >= 100) {
-    //     progress = 100;
-    //     clearInterval(interval);
-    //     setIsUploading(false);
-    //     setVideoContent((prev) => ({
-    //       ...prev,
-    //       uploadProgress: 100,
-    //       isUploaded: true,
-    //       duration: "10:30", // This would be calculated from actual video
-    //     }));
-    //   }
-    //   setVideoContent((prev) => ({ ...prev, uploadProgress: progress }));
-    // }, 300);
   };
 
   const handleResourceUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

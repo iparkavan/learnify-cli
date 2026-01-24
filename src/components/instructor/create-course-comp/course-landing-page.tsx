@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { Image, Video } from "lucide-react";
+import { Image, Play, Trash2, Video } from "lucide-react";
 
 import {
   containerVariants,
@@ -28,12 +28,31 @@ import {
 } from "@/lms-pages/instructor/course-creation/create-course";
 import { UseFormReturn } from "react-hook-form";
 import { CourseFormData } from "@/schema/course-schema";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress";
 
 interface CourseLandingPageSectionProps {
   form: UseFormReturn<CourseFormData>;
   categories: string[];
   levels: string[];
   languages: string[];
+  onCourseImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  imageUploading: boolean;
+  courseImage: {
+    file: File;
+    preview: string;
+  } | null;
+  onRemoveCourseImage: () => void;
+  onVideoUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  videoUploading: boolean;
+  promoVideo: {
+    file: File;
+    name: string;
+    size: string;
+  } | null;
+  onRemovePromoVideo: () => void;
+  videoUploadProgress: number;
 }
 
 const CourseLandingPageSection: React.FC<CourseLandingPageSectionProps> = ({
@@ -41,6 +60,15 @@ const CourseLandingPageSection: React.FC<CourseLandingPageSectionProps> = ({
   categories,
   levels,
   languages,
+  onCourseImageUpload,
+  imageUploading,
+  courseImage,
+  onRemoveCourseImage,
+  onVideoUpload,
+  videoUploading,
+  promoVideo,
+  onRemovePromoVideo,
+  videoUploadProgress,
 }) => {
   return (
     <motion.div
@@ -259,12 +287,71 @@ const CourseLandingPageSection: React.FC<CourseLandingPageSectionProps> = ({
                 pixels; .jpg, .jpeg, .gif, or .png.
               </p>
             </div>
-            <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer bg-muted/30">
-              <Image className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-foreground font-medium">Upload Image</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                No file selected
-              </p>
+            <div className="relative">
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/gif"
+                onChange={onCourseImageUpload}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                disabled={imageUploading}
+              />
+              {courseImage ? (
+                <div className="border-2 border-primary/50 rounded-xl overflow-hidden bg-muted/30">
+                  <div className="relative aspect-video">
+                    <img
+                      src={courseImage.preview}
+                      alt="Course thumbnail"
+                      className="w-full h-full object-cover"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 z-20"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveCourseImage();
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="p-3 border-t border-border">
+                    <p className="text-sm text-foreground font-medium truncate">
+                      {courseImage.file.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {(courseImage.file.size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                    imageUploading
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50 bg-muted/30"
+                  }`}
+                >
+                  {imageUploading ? (
+                    <>
+                      <div className="h-12 w-12 mx-auto mb-4 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
+                      <p className="text-foreground font-medium">
+                        Uploading...
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Image className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-foreground font-medium">
+                        Upload Image
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Click or drag to upload
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </motion.div>
 
@@ -279,12 +366,62 @@ const CourseLandingPageSection: React.FC<CourseLandingPageSectionProps> = ({
                 enroll.
               </p>
             </div>
-            <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer bg-muted/30">
-              <Video className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-foreground font-medium">Upload Video</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                No file selected
-              </p>
+            <div className="relative">
+              <input
+                type="file"
+                accept="video/*"
+                onChange={onVideoUpload}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                disabled={videoUploading || !!promoVideo}
+              />
+              {promoVideo ? (
+                <div className="border-2 border-primary/50 rounded-xl p-4 bg-muted/30">
+                  <div className="flex items-center gap-4">
+                    <div className="h-16 w-16 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Play className="h-8 w-8 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-foreground font-medium truncate">
+                        {promoVideo.name}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {promoVideo.size}
+                      </p>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="z-20"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemovePromoVideo();
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ) : videoUploading ? (
+                <div className="border-2 border-dashed border-primary rounded-xl p-8 bg-primary/5">
+                  <div className="space-y-4">
+                    <Video className="h-12 w-12 mx-auto text-primary" />
+                    <div className="space-y-2">
+                      <Progress value={videoUploadProgress} className="h-2" />
+                      <p className="text-center text-sm text-foreground font-medium">
+                        Uploading... {videoUploadProgress}%
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors bg-muted/30">
+                  <Video className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-foreground font-medium">Upload Video</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Click or drag to upload
+                  </p>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>

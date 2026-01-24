@@ -235,6 +235,21 @@ const AddCourse = () => {
     sectionId: string;
     lecture: Lecture;
   } | null>(null);
+
+  // Course image and promo video state
+  const [courseImage, setCourseImage] = useState<{
+    file: File;
+    preview: string;
+  } | null>(null);
+  const [promoVideo, setPromoVideo] = useState<{
+    file: File;
+    name: string;
+    size: string;
+  } | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [videoUploadProgress, setVideoUploadProgress] = useState(0);
+
   const form = useForm<CourseFormData>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
@@ -252,6 +267,85 @@ const AddCourse = () => {
       congratsMessage: "",
     },
   });
+
+  // Handle course image upload
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload an image file (jpg, jpeg, gif, or png).",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setImageUploading(true);
+      const preview = URL.createObjectURL(file);
+
+      // Simulate upload delay
+      setTimeout(() => {
+        setCourseImage({ file, preview });
+        setImageUploading(false);
+        toast({
+          title: "Image uploaded!",
+          description: "Your course image has been uploaded successfully.",
+        });
+      }, 1000);
+    }
+  };
+
+  // Handle promo video upload
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("video/")) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload a video file.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setVideoUploading(true);
+      setVideoUploadProgress(0);
+
+      // Simulate upload progress
+      const interval = setInterval(() => {
+        setVideoUploadProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setVideoUploading(false);
+            const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+            setPromoVideo({ file, name: file.name, size: `${sizeInMB} MB` });
+            toast({
+              title: "Video uploaded!",
+              description:
+                "Your promotional video has been uploaded successfully.",
+            });
+            return 100;
+          }
+          return prev + 10;
+        });
+      }, 200);
+    }
+  };
+
+  // Remove course image
+  const removeCourseImage = () => {
+    if (courseImage?.preview) {
+      URL.revokeObjectURL(courseImage.preview);
+    }
+    setCourseImage(null);
+  };
+
+  // Remove promo video
+  const removePromoVideo = () => {
+    setPromoVideo(null);
+    setVideoUploadProgress(0);
+  };
 
   // Section handlers
   const addSection = () => {
@@ -990,12 +1084,71 @@ const AddCourse = () => {
                       750x422 pixels; .jpg, .jpeg, .gif, or .png.
                     </p>
                   </div>
-                  <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer bg-muted/30">
-                    <Image className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-foreground font-medium">Upload Image</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      No file selected
-                    </p>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/gif"
+                      onChange={handleImageUpload}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      disabled={imageUploading}
+                    />
+                    {courseImage ? (
+                      <div className="border-2 border-primary/50 rounded-xl overflow-hidden bg-muted/30">
+                        <div className="relative aspect-video">
+                          <img
+                            src={courseImage.preview}
+                            alt="Course thumbnail"
+                            className="w-full h-full object-cover"
+                          />
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2 z-20"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeCourseImage();
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="p-3 border-t border-border">
+                          <p className="text-sm text-foreground font-medium truncate">
+                            {courseImage.file.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {(courseImage.file.size / 1024).toFixed(1)} KB
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                          imageUploading
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50 bg-muted/30"
+                        }`}
+                      >
+                        {imageUploading ? (
+                          <>
+                            <div className="h-12 w-12 mx-auto mb-4 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
+                            <p className="text-foreground font-medium">
+                              Uploading...
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <Image className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                            <p className="text-foreground font-medium">
+                              Upload Image
+                            </p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Click or drag to upload
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </motion.div>
 
@@ -1010,12 +1163,67 @@ const AddCourse = () => {
                       likely to enroll.
                     </p>
                   </div>
-                  <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer bg-muted/30">
-                    <Video className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-foreground font-medium">Upload Video</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      No file selected
-                    </p>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="video/*"
+                      onChange={handleVideoUpload}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      disabled={videoUploading || !!promoVideo}
+                    />
+                    {promoVideo ? (
+                      <div className="border-2 border-primary/50 rounded-xl p-4 bg-muted/30">
+                        <div className="flex items-center gap-4">
+                          <div className="h-16 w-16 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Play className="h-8 w-8 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-foreground font-medium truncate">
+                              {promoVideo.name}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {promoVideo.size}
+                            </p>
+                          </div>
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="z-20"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removePromoVideo();
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ) : videoUploading ? (
+                      <div className="border-2 border-dashed border-primary rounded-xl p-8 bg-primary/5">
+                        <div className="space-y-4">
+                          <Video className="h-12 w-12 mx-auto text-primary" />
+                          <div className="space-y-2">
+                            <Progress
+                              value={videoUploadProgress}
+                              className="h-2"
+                            />
+                            <p className="text-center text-sm text-foreground font-medium">
+                              Uploading... {videoUploadProgress}%
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors bg-muted/30">
+                        <Video className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                        <p className="text-foreground font-medium">
+                          Upload Video
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Click or drag to upload
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               </div>
