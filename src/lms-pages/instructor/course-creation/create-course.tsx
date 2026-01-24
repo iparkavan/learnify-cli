@@ -48,6 +48,19 @@ import { toast } from "sonner";
 import CourseLandingPageSection from "@/components/instructor/create-course-comp/course-landing-page";
 import CoursePricingSection from "@/components/instructor/create-course-comp/course-pricing";
 import CoursePromotionSection from "@/components/instructor/create-course-comp/course-promotions";
+import {
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { arrayMove } from "@dnd-kit/sortable";
 
 export interface Lecture {
   id: string;
@@ -88,14 +101,6 @@ const languages = [
 ];
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
-
-// type ActiveSection =
-//   | "intended-learners"
-//   | "course-messages"
-//   | "curriculum"
-//   | "landing-page"
-//   | "pricing"
-//   | "promotions";
 
 export const ACTIVE_SECTIONS = {
   INTENDED_LEARNERS: "intended-learners",
@@ -404,6 +409,42 @@ const CreateCourse = () => {
     }
   };
 
+  const handleSectionDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = sections.findIndex((s) => s.id === active.id);
+      const newIndex = sections.findIndex((s) => s.id === over.id);
+      setSections(arrayMove(sections, oldIndex, newIndex));
+      toast("Section reordered", {
+        description: "Your curriculum has been updated.",
+      });
+    }
+  };
+
+  const handleReorderLectures = (
+    sectionId: string,
+    newLectureOrder: string[],
+  ) => {
+    setSections(
+      sections.map((s) => {
+        if (s.id === sectionId) {
+          return {
+            ...s,
+            Lectures: newLectureOrder
+              .map((lectureId) =>
+                s.Lectures.find((lec) => lec.id === lectureId),
+              )
+              .filter((lec): lec is Lecture => !!lec),
+          };
+        }
+        return s;
+      }),
+    );
+    toast("Lecture reordered", {
+      description: "Your curriculum has been updated.",
+    });
+  };
+
   const onSubmit = (data: CourseFormData) => {
     console.log("Course data:", {
       ...data,
@@ -455,6 +496,7 @@ const CreateCourse = () => {
         return (
           <CurriculumSection
             sections={sections}
+            handleSectionDragEnd={handleSectionDragEnd}
             onAddSectionHandler={onAddSectionHandler}
             onAddLecture={onAddLecture}
             totalLectures={totalLectures}
@@ -465,6 +507,8 @@ const CreateCourse = () => {
             onUpdateSection={updateSectionHandler}
             openAccordionSections={openAccordionSections}
             setOpenAccordionSections={setOpenAccordionSections}
+            // sensors={sensors}
+            onReorderLectures={handleReorderLectures}
           />
         );
       case ACTIVE_SECTIONS.LANDING_PAGE:
