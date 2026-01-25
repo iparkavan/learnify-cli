@@ -246,7 +246,7 @@ export const SortableSection = ({
           {/* Lectures - Collapsible Content */}
           <AccordionContent className="flex p-4 flex-col gap-4 text-balance">
             <motion.div
-              className="p-4 space-y-2"
+              className=" space-y-2"
               initial={false}
               animate={{ opacity: 1 }}
             >
@@ -287,7 +287,7 @@ export const SortableSection = ({
               </DndContext>
 
               {section.Lectures.length === 0 && (
-                <div className="text-center py-6 text-muted-foreground text-sm">
+                <div className="text-center text-muted-foreground text-sm">
                   No lectures yet. Add your first lecture below.
                 </div>
               )}

@@ -7,34 +7,13 @@ import {
 } from "../../../lms-pages/instructor/course-creation/create-course";
 import React, { Dispatch, SetStateAction } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  BookOpen,
-  CheckCircle2,
-  Code,
-  FileText,
-  GripVertical,
-  HelpCircle,
-  Play,
-  Plus,
-  Trash2,
-  Upload,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { BookOpen, Code, FileText, HelpCircle, Play, Plus } from "lucide-react";
 import {
   closestCenter,
   DndContext,
   DragEndEvent,
   KeyboardSensor,
   PointerSensor,
-  Sensors,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";

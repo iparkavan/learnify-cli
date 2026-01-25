@@ -168,7 +168,6 @@ export const LectureContentModal = ({
 
     setIsUploading(true);
 
-    // Show file info instantly
     setVideoContent({
       file,
       fileName: file.name,
@@ -176,49 +175,44 @@ export const LectureContentModal = ({
       uploadProgress: 0,
     });
 
-    const sigRes = await axiosClient("/cloudinary-signature");
-    const sigData = await sigRes.data;
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("api_key", sigData.apiKey);
-    formData.append("timestamp", sigData.timestamp);
-    formData.append("signature", sigData.signature);
-    formData.append("folder", "courses/lectures/videos");
-
     try {
+      const sigRes = await axiosClient.get(
+        "/cloudinary-signature?folder=courses/lectures/videos",
+      );
+      const sigData = sigRes.data;
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("api_key", sigData.apiKey);
+      formData.append("timestamp", sigData.timestamp);
+      formData.append("signature", sigData.signature);
+      formData.append("folder", sigData.folder);
+      formData.append("resource_type", "video");
+
       const res = await axios.post<CloudinaryUploadResponse>(
         `https://api.cloudinary.com/v1_1/${sigData.cloudName}/video/upload`,
         formData,
         {
-          onUploadProgress: (progressEvent: AxiosProgressEvent) => {
-            const percent = Math.round(
-              (progressEvent.loaded * 100) / (progressEvent.total || 1),
-            );
-
-            setVideoContent((prev) => ({
-              ...prev,
-              uploadProgress: percent,
-            }));
+          onUploadProgress: (e) => {
+            const percent = Math.round((e.loaded * 100) / (e.total || 1));
+            setVideoContent((prev) => ({ ...prev, uploadProgress: percent }));
           },
         },
       );
-
-      const videoUrl: string = res.data.secure_url;
 
       setVideoContent((prev) => ({
         ...prev,
         uploadProgress: 100,
         isUploaded: true,
-        url: videoUrl,
+        url: res.data.secure_url,
         duration: String(res.data.duration),
       }));
-
-      setIsUploading(false);
     } catch (error) {
-      console.log(error);
+      console.error("Upload failed", error);
       alert("Video upload failed");
+    } finally {
       setIsUploading(false);
+      e.target.value = "";
     }
   };
 

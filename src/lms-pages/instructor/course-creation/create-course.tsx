@@ -61,6 +61,9 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { arrayMove } from "@dnd-kit/sortable";
+import axiosClient from "@/utils/axios-client";
+import axios from "axios";
+import { CloudinaryUploadResponse } from "@/types/cloudinary-types";
 
 export interface Lecture {
   id: string;
@@ -230,7 +233,9 @@ const CreateCourse = () => {
   });
 
   // Handle course image upload
-  const handleCourseImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCourseImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (file) {
       if (!file.type.startsWith("image/")) {
@@ -242,49 +247,117 @@ const CreateCourse = () => {
 
       setImageUploading(true);
       const preview = URL.createObjectURL(file);
+      setCourseImage({ file, preview });
+
+      try {
+        const sigRes = await axiosClient.get(
+          "/cloudinary-signature?folder=courses/thumbnails",
+        );
+        const sigData = sigRes.data;
+
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("api_key", sigData.apiKey);
+        formData.append("timestamp", sigData.timestamp);
+        formData.append("signature", sigData.signature);
+        formData.append("folder", sigData.folder);
+        formData.append("resource_type", "image");
+
+        const res = await axios.post<CloudinaryUploadResponse>(
+          `https://api.cloudinary.com/v1_1/${sigData.cloudName}/image/upload`,
+          formData,
+          // {
+          //   onUploadProgress: (e) => {
+          //     const percent = Math.round((e.loaded * 100) / (e.total || 1));
+          //     setCourseImage((prev) => ({
+          //       ...prev,
+          //       uploadProgress: percent,
+          //     }));
+          //   },
+          // },
+        );
+
+        const imageUrl = res.data.secure_url;
+
+        // ✅ Save in React Hook Form
+        form.setValue("thumbnail", imageUrl, { shouldDirty: true });
+
+        toast("Image uploaded!", {
+          description: "Your course image uploaded successfully.",
+        });
+      } catch (error) {
+        console.error("Image upload failed", error);
+        toast("Upload failed", {
+          description: "Image upload failed. Try again.",
+        });
+      }
 
       // Simulate upload delay
-      setTimeout(() => {
-        setCourseImage({ file, preview });
-        setImageUploading(false);
-        toast("Image uploaded!", {
-          description: "Your course image has been uploaded successfully.",
-        });
-      }, 1000);
+      // setTimeout(() => {
+      //   setCourseImage({ file, preview });
+      //   setImageUploading(false);
+      //   toast("Image uploaded!", {
+      //     description: "Your course image has been uploaded successfully.",
+      //   });
+      // }, 1000);
     }
   };
 
   // Handle promo video upload
-  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith("video/")) {
-        toast("Invalid file type", {
-          description: "Please upload a video file.",
-        });
-        return;
-      }
+    if (!file) return;
 
-      setVideoUploading(true);
-      setVideoUploadProgress(0);
+    if (!file.type.startsWith("video/")) {
+      toast("Invalid file type");
+      return;
+    }
 
-      // Simulate upload progress
-      const interval = setInterval(() => {
-        setVideoUploadProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setVideoUploading(false);
-            const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
-            setPromoVideo({ file, name: file.name, size: `${sizeInMB} MB` });
-            toast("Video uploaded!", {
-              description:
-                "Your promotional video has been uploaded successfully.",
-            });
-            return 100;
-          }
-          return prev + 10;
-        });
-      }, 200);
+    setVideoUploading(true);
+    setVideoUploadProgress(0);
+
+    // setPromoVideo({ file, name: file.name, size: `${sizeInMB} MB` });
+
+    try {
+      const sigRes = await axiosClient.get(
+        "/cloudinary-signature?folder=courses/promo-videos",
+      );
+      const sigData = sigRes.data;
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("api_key", sigData.apiKey);
+      formData.append("timestamp", sigData.timestamp);
+      formData.append("signature", sigData.signature);
+      formData.append("folder", sigData.folder);
+      formData.append("resource_type", "video");
+
+      const res = await axios.post(
+        `https://api.cloudinary.com/v1_1/${sigData.cloudName}/video/upload`,
+        formData,
+        {
+          onUploadProgress: (e) => {
+            const percent = Math.round((e.loaded * 100) / (e.total || 1));
+            setVideoUploadProgress(percent);
+          },
+        },
+      );
+
+      const videoUrl = res.data.secure_url;
+      form.setValue("promoVideo", videoUrl);
+
+      const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+      setPromoVideo({ file, name: file.name, size: `${sizeInMB} MB` });
+      setVideoUploadProgress(100);
+
+      toast("Video uploaded!");
+    } catch (err) {
+      console.error(err);
+      toast("Upload failed");
+    } finally {
+      setVideoUploading(false);
+      setTimeout(() => setVideoUploadProgress(0), 2000); // 👈 delay reset
+      e.target.value = "";
     }
   };
 
